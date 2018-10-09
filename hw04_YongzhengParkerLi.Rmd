@@ -1,0 +1,110 @@
+---
+title: "hw04_YongzhengParkerLi"
+author: "Yongzheng Parker Li"
+date: "10/8/2018"
+output: github_document
+---
+
+This file is the Rmd file of *Homework 04* of the course STAT545A, taught by [Vincenzo Coia](https://github.com/vincenzocoia) at the University of British Columbia (UBC). The detailed requirements of this assignment could be found [here](http://stat545.com/Classroom/assignments/hw04/hw04.html). The STAT545A course page is [here](http://stat545.com/Classroom/). My own participation repository is [here](https://github.com/ParkerLi/STAT545_participation). The goal of this assignment is to solidify my data wrangling skills by working some realistic problems in the grey area between data aggregation and data reshasping.  
+
+# Bring Data In 
+
+This section load all the necessary packages. To disable all the conflicts/warning and other messges, I utilized the <code>suppressPackageStartupMessages</code> function I learned from class. Another way to do this is to use <code>Message=F</code> or <code>warn.conflicts=F</code> in the R chunk setting.
+
+```{r preparation_00, message=F}
+suppressPackageStartupMessages(library(gapminder))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(knitr))
+```
+
+# Data Reshaping  
+
+I pick _prompt 2_ in this section: make a tibble with one row per year and columns for life expectancy for two or more countries. This activity combines both table and graph reshaping.
+- use <code>knitr::kable()</code> to make this table look pretty in your rendered homework
+
+```{r reshaping_00}
+newgapminder <- gapminder %>% 
+  select(year, country, lifeExp) %>% 
+  group_by(country) %>% 
+  filter(country == "Canada" | country == "China" | country == "Italy")
+spread(newgapminder, key = country, value = lifeExp) %>% 
+  knitr::kable(format = "markdown", justify = "centre",
+               digits = 1, caption = "Data Reshaping, Activity 2: Canada, China, and Italy")
+```
+
+In this process, I used piping to make the code more straightforward. <code>select</code> picks the necessary columns I want. <code>group_by</code> categories the data into different country groups. <code>filter</code> gives me the countries I want--Canada, China, and Italy--countries I am a resident. <code>kable</code> knits the table into a better table format.
+
+- take advantage of this new data shape to scatterplot life expectancy for one country against that of another
+
+```{r reshaping_01}
+newgapminder %>% 
+  ggplot(aes(year, lifeExp)) +
+  geom_point(aes(colour = country)) +
+  xlab("Year") +
+  ylab("LifeExp") +
+  ggtitle("Life Expectancy, 1952-2007, Canada-China-Italy")
+```
+
+This part takes advantage of the new data shape to scatterplop life expectancy for the three countries I picked. I give them different colors and add explanations (x and y axis, title). We can tell that all countries have an increased lifeExp trend. Canada and Italy, both developed countries, share similar trend and life values; China, on the other hand, also increases but the baseline is low and still catching up.
+
+# Data Join  
+
+I pick _prompt 1_ that explores the different kinds of join functions. I had a hard time deciding which complementary data frame to use. However, I got inspired by one classmate: QinxinLin. I did one peer review for her homework and noticed one brilliant data frame. I want to show my gratitude to her! Thank you! Dataset is from (here)[http://www.exploredata.net/Downloads/WHO-Data-Set].
+
+```{r join_00}
+new_dataset <- read.csv("WHO.csv") %>% 
+  select(country, Energy_use, Exports_of_goods_and_services) 
+kable(head(new_dataset, 10))
+```
+
+The new data frame share the same _country_ category. I added _Energy_use_ and _Exports_of_goods_and_services_ as the two new variables. To make the table reader-friendly, I only demonstrate the first 10 rows. The following sections show the different use of <code>join</code> functions.
+
+```{r join_01, warning=FALSE}
+left <- left_join(gapminder, new_dataset, by = "country")
+kable(head(left, 10))
+```
+
+To make it simpler, I use _a_ to emobody _gapminder_, _b_ to embody _new_dataset_. <code>left_join</code> joins matching rows from b to a.
+
+```{r join_02, warning=FALSE}
+right <- right_join(gapminder, new_dataset, by = "country")
+kable(head(right, 10))
+```
+
+<code>right_join</code> joins matching rows from a to b.
+
+```{r join_03, warning=FALSE}
+inner <- inner_join(gapminder, new_dataset, by = "country")
+kable(head(inner, 10))
+```
+
+<code>inner_join</code> retains only rows in both sets.
+
+```{r join_04, warning=FALSE}
+full <- full_join(gapminder, new_dataset, by = "country")
+kable(head(full, 10))
+```
+
+<code>full_join</code> retains all values, all rows.
+
+```{r join_05, warning=F}
+semi <- semi_join(gapminder, new_dataset, by = "country")
+kable(head(semi, 10))
+```
+
+<code>semi_join</code> shows all rows in a that a match in b.
+
+```{r join_06, warning=F}
+anti <- anti_join(gapminder, new_dataset, by = "country")
+kable(head(anti, 10))
+```
+
+<code>anti_join</code> shows all rows in a that do not have a match in b.
+
+
+
+
+
+
